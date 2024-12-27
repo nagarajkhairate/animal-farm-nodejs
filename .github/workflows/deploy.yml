@@ -1,0 +1,37 @@
+name: Build and Push Animal Farm Node.js Docker Image
+
+on:
+  push:
+    branches:
+      - main  # Trigger the workflow when changes are pushed to the 'main' branch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest  # Use the latest Ubuntu runner for CI
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2  # Check out the repository
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2  # Set up Docker Buildx for building multi-platform images
+
+    - name: Cache Docker layers
+      uses: actions/cache@v2
+      with:
+        path: /tmp/.buildx-cache
+        key: ${{ runner.os }}-buildx-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-buildx-
+
+    - name: Build Docker image
+      run: |
+        docker build -t ${{ secrets.DOCKER_USERNAME }}/animal-farm-nodejs:latest .  # Replace with your Docker Hub username and repository name
+
+    - name: Log in to Docker Hub
+      run: |
+        echo ${{ secrets.DOCKER_PASSWORD }} | docker login --username ${{ secrets.DOCKER_USERNAME }} --password-stdin  # Log in securely using Docker Hub credentials
+
+    - name: Push Docker image to Docker Hub
+      run: |
+        docker push ${{ secrets.DOCKER_USERNAME }}/animal-farm-nodejs:latest  # Push the Docker image to Docker Hub
